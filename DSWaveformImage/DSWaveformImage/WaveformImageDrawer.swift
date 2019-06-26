@@ -5,9 +5,9 @@ public struct WaveformImageDrawer {
     var sampleWidth: CGFloat = 0.0
     var sampleOffset: CGFloat = 0.0
     
-    public init(sampleWidth: CGFloat = 2.0, sampleOffset: CGFloat = 1.5) {
-        self.sampleWidth = sampleWidth * 4.0
-        self.sampleOffset = sampleOffset * 4.0
+    public init(sampleWidth: CGFloat = 2.0, sampleOffset: CGFloat = 1.5, imageMultiplayer: CGFloat = 4.0) {
+        self.sampleWidth = sampleWidth * imageMultiplayer
+        self.sampleOffset = sampleOffset * imageMultiplayer
     }
     
     // swiftlint:disable function_parameter_count
