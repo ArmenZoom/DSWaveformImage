@@ -5,9 +5,9 @@ public struct WaveformImageDrawer {
     var sampleWidth: CGFloat = 0.0
     var sampleOffset: CGFloat = 0.0
     
-    public init(sampleWidth: CGFloat = 8.0, sampleOffset: CGFloat = 6.0) {
-        self.sampleWidth = sampleWidth
-        self.sampleOffset = sampleOffset
+    public init(sampleWidth: CGFloat = 2.0, sampleOffset: CGFloat = 1.5) {
+        self.sampleWidth = sampleWidth * 4.0
+        self.sampleOffset = sampleOffset * 4.0
     }
     
     // swiftlint:disable function_parameter_count
@@ -33,7 +33,7 @@ public struct WaveformImageDrawer {
                               scale: CGFloat = 1.0,
                               paddingFactor: CGFloat? = nil) -> UIImage? {
         guard let waveform = Waveform(audioAsset: audioAsset) else { return nil }
-        let configuration = WaveformConfiguration(size: size, color: color, backgroundColor: backgroundColor, style: style,
+        let configuration = WaveformConfiguration(size: CGSize(width: size.width * 4.0, height: size.height * 4.0) , color: color, backgroundColor: backgroundColor, style: style,
                                                   position: position, scale: scale, paddingFactor: paddingFactor)
         return waveformImage(from: waveform, with: configuration)
     }
@@ -113,7 +113,7 @@ private extension WaveformImageDrawer {
         switch configuration.style {
         case .filled, .striped:
             context.setFillColor(configuration.color.cgColor)
-            context.fillPath()//strokePath()
+            context.fillPath()
         case .gradient:
             context.replacePathWithStrokedPath()
             context.clip()
