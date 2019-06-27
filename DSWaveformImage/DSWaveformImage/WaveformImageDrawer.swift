@@ -4,10 +4,12 @@ import AVFoundation
 public struct WaveformImageDrawer {
     var sampleWidth: CGFloat = 0.0
     var sampleOffset: CGFloat = 0.0
+    var imageMultiplayer: CGFloat = 1.0
     
     public init(sampleWidth: CGFloat = 2.0, sampleOffset: CGFloat = 1.5, imageMultiplayer: CGFloat = 4.0) {
         self.sampleWidth = sampleWidth * imageMultiplayer
         self.sampleOffset = sampleOffset * imageMultiplayer
+        self.imageMultiplayer = imageMultiplayer
     }
     
     // swiftlint:disable function_parameter_count
@@ -33,7 +35,7 @@ public struct WaveformImageDrawer {
                               scale: CGFloat = 1.0,
                               paddingFactor: CGFloat? = nil) -> UIImage? {
         guard let waveform = Waveform(audioAsset: audioAsset) else { return nil }
-        let configuration = WaveformConfiguration(size: CGSize(width: size.width * 4.0, height: size.height * 4.0) , color: color, backgroundColor: backgroundColor, style: style,
+        let configuration = WaveformConfiguration(size: CGSize(width: size.width * self.imageMultiplayer, height: size.height * self.imageMultiplayer) , color: color, backgroundColor: backgroundColor, style: style,
                                                   position: position, scale: scale, paddingFactor: paddingFactor)
         return waveformImage(from: waveform, with: configuration)
     }
