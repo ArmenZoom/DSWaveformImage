@@ -191,19 +191,31 @@ private extension WaveformImageDrawer {
         let allPaths = CGMutablePath()
         var maxAmplitude: CGFloat = 0.0 // we know 1 is our max in normalized data, but we keep it 'generic'
         //context.setp.setLineWidth(self.sampleWidth)
+        allPaths.move(to: CGPoint.zero)
+      
         for (x, sample) in samples.enumerated() {
             let xPos = CGFloat(x) * (sampleOffset + sampleWidth)
             let invertedDbSample = 1 - CGFloat(sample) // sample is in dB, linearly normalized to [0, 1] (1 -> -50 dB)
             let drawingAmplitude = max(minimumGraphAmplitude, invertedDbSample * drawMappingFactor)
             let drawingAmplitudeUp = positionAdjustedGraphCenter - drawingAmplitude
-            // let drawingAmplitudeDown = positionAdjustedGraphCenter + drawingAmplitude
             maxAmplitude = max(drawingAmplitude, maxAmplitude)
             
-            let cgRect = CGRect(x: xPos , y: drawingAmplitudeUp, width: sampleWidth, height: 0)
-            let path = UIBezierPath(roundedRect: cgRect, cornerRadius: 0)
-            allPaths.addPath(path.cgPath)
+            allPaths.addLine(to: CGPoint(x: xPos + sampleWidth * 0.5, y: drawingAmplitudeUp))
+//            let cgRect = CGRect(x: xPos , y: drawingAmplitudeUp, width: sampleWidth, height: 0)
+//            let path = UIBezierPath(roundedRect: cgRect, cornerRadius: 0)
+//            allPaths.addPath(path.cgPath)
         }
-        allPaths.closeSubpath()
+        
+        for i in stride(from: samples.count - 1, through: 0, by: -1) {
+            let sample = samples[i]
+            let xPos = CGFloat(i) * (sampleOffset + sampleWidth)
+            let invertedDbSample = 1 - CGFloat(sample) // sample is in dB, linearly normalized to [0, 1] (1 -> -50 dB)
+            let drawingAmplitude = max(minimumGraphAmplitude, invertedDbSample * drawMappingFactor)
+            let drawingAmplitudeUp = positionAdjustedGraphCenter - drawingAmplitude
+            allPaths.addLine(to: CGPoint(x: xPos + sampleWidth * 0.5, y: -drawingAmplitudeUp))
+
+        }
+//        allPaths.closeSubpath()
         return allPaths
     }
 }
