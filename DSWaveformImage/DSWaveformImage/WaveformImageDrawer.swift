@@ -23,7 +23,7 @@ public struct WaveformImageDrawer {
                                                         position: configuration.position,
                                                         scale: configuration.scale,
                                                         paddingFactor: configuration.paddingFactor)
-        return render(waveform: waveform, with: scaledConfiguration)
+        return renderPath(waveform: waveform, with: scaledConfiguration)
     }
     
 
