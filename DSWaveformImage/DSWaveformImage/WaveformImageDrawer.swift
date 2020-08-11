@@ -69,7 +69,7 @@ public struct WaveformImageDrawer {
                              position: position, scale: scale, paddingFactor: paddingFactor)
     }
     
-    public func waveformImage(fromAudio audioAsset: AVURLAsset,
+    public func waveformPath(fromAudio audioAsset: AVURLAsset,
                                 size: CGSize,
                                 color: UIColor = UIColor.black,
                                 backgroundColor: UIColor = UIColor.clear,
@@ -80,10 +80,10 @@ public struct WaveformImageDrawer {
           guard let waveform = Waveform(audioAsset: audioAsset) else { return nil }
           let configuration = WaveformConfiguration(size: CGSize(width: size.width * self.imageMultiplayer, height: size.height * self.imageMultiplayer) , color: color, backgroundColor: backgroundColor, style: style,
                                                     position: position, scale: scale, paddingFactor: paddingFactor)
-          return waveformImage(from: waveform, with: configuration)
+          return waveformPath(from: waveform, with: configuration)
       }
       
-      public func waveformImage(fromAudioAt audioAssetURL: URL,
+      public func waveformPath(fromAudioAt audioAssetURL: URL,
                                 size: CGSize,
                                 color: UIColor = UIColor.black,
                                 backgroundColor: UIColor = UIColor.clear,
@@ -92,7 +92,7 @@ public struct WaveformImageDrawer {
                                 scale: CGFloat = 1.0,
                                 paddingFactor: CGFloat? = nil) -> CGPath? {
           let audioAsset = AVURLAsset(url: audioAssetURL)
-          return waveformImage(fromAudio: audioAsset, size: size, color: color, backgroundColor: backgroundColor, style: style,
+          return waveformPath(fromAudio: audioAsset, size: size, color: color, backgroundColor: backgroundColor, style: style,
                                position: position, scale: scale, paddingFactor: paddingFactor)
       }
     // swiftlint:enable function_parameter_count
