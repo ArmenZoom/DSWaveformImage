@@ -12,6 +12,22 @@ public struct WaveformImageDrawer {
         self.imageMultiplayer = imageMultiplayer
     }
     
+    
+    public func waveformPath(from waveform: Waveform, with configuration: WaveformConfiguration) -> CGPath? {
+        let scaledSize = CGSize(width: configuration.size.width * configuration.scale,
+                                height: configuration.size.height * configuration.scale)
+        let scaledConfiguration = WaveformConfiguration(size: scaledSize,
+                                                        color: configuration.color,
+                                                        backgroundColor: configuration.backgroundColor,
+                                                        style: configuration.style,
+                                                        position: configuration.position,
+                                                        scale: configuration.scale,
+                                                        paddingFactor: configuration.paddingFactor)
+        return render(waveform: waveform, with: scaledConfiguration)
+    }
+    
+
+    
     // swiftlint:disable function_parameter_count
     public func waveformImage(from waveform: Waveform, with configuration: WaveformConfiguration) -> UIImage? {
         let scaledSize = CGSize(width: configuration.size.width * configuration.scale,
@@ -58,6 +74,12 @@ public struct WaveformImageDrawer {
 // MARK: Image generation
 
 private extension WaveformImageDrawer {
+    func renderPath(waveform: Waveform, with configuration: WaveformConfiguration) -> CGPath? {
+        let sampleCount = Int(configuration.size.width / (self.sampleWidth + self.sampleOffset))
+        guard let samples = waveform.samples(count: sampleCount) else { return nil }
+        return getCustomPath(from: samples, with: configuration)
+    }
+    
     func render(waveform: Waveform, with configuration: WaveformConfiguration) -> UIImage? {
         let sampleCount = Int(configuration.size.width / (self.sampleWidth + self.sampleOffset))
         guard let imageSamples = waveform.samples(count: sampleCount) else { return nil }
@@ -130,5 +152,31 @@ private extension WaveformImageDrawer {
                                        end: CGPoint(x: 0, y: positionAdjustedGraphCenter + maxAmplitude),
                                        options: .drawsAfterEndLocation)
         }
+    }
+    
+    func getCustomPath(from samples: [Float], with configuration: WaveformConfiguration) -> CGPath {
+        let graphRect = CGRect(origin: CGPoint.zero, size: configuration.size)
+        let positionAdjustedGraphCenter = CGFloat(configuration.position.value()) * graphRect.size.height
+        let verticalPaddingDivisor = configuration.paddingFactor ?? CGFloat(configuration.position.value() == 0.5 ? 2.5 : 1.5)
+        let drawMappingFactor = graphRect.size.height / verticalPaddingDivisor
+        let minimumGraphAmplitude: CGFloat = 1 // we want to see at least a 1pt line for silence
+        
+        let allPaths = CGMutablePath()
+        var maxAmplitude: CGFloat = 0.0 // we know 1 is our max in normalized data, but we keep it 'generic'
+        //context.setp.setLineWidth(self.sampleWidth)
+        for (x, sample) in samples.enumerated() {
+            let xPos = CGFloat(x) * (sampleOffset + sampleWidth)
+            let invertedDbSample = 1 - CGFloat(sample) // sample is in dB, linearly normalized to [0, 1] (1 -> -50 dB)
+            let drawingAmplitude = max(minimumGraphAmplitude, invertedDbSample * drawMappingFactor)
+            let drawingAmplitudeUp = positionAdjustedGraphCenter - drawingAmplitude
+            // let drawingAmplitudeDown = positionAdjustedGraphCenter + drawingAmplitude
+            maxAmplitude = max(drawingAmplitude, maxAmplitude)
+            
+            let cgRect = CGRect(x: xPos , y: drawingAmplitudeUp, width: sampleWidth, height: 2 * drawingAmplitude)
+            let path = UIBezierPath(roundedRect: cgRect, cornerRadius: sampleWidth / 2.0)
+            allPaths.addPath(path.cgPath)
+            
+        }
+        return allPaths
     }
 }
