@@ -199,11 +199,11 @@ private extension WaveformImageDrawer {
             // let drawingAmplitudeDown = positionAdjustedGraphCenter + drawingAmplitude
             maxAmplitude = max(drawingAmplitude, maxAmplitude)
             
-            let cgRect = CGRect(x: xPos , y: drawingAmplitudeUp, width: sampleWidth, height: 2 * drawingAmplitude)
-            let path = UIBezierPath(roundedRect: cgRect, cornerRadius: sampleWidth / 2.0)
+            let cgRect = CGRect(x: xPos , y: drawingAmplitudeUp, width: sampleWidth, height: 0)
+            let path = UIBezierPath(roundedRect: cgRect, cornerRadius: 0)
             allPaths.addPath(path.cgPath)
-            
         }
+        allPaths.closeSubpath()
         return allPaths
     }
 }
