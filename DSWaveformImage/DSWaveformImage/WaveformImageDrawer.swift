@@ -13,7 +13,7 @@ public struct WaveformImageDrawer {
     }
     
     
-    public func waveformPath(from waveform: Waveform, with configuration: WaveformConfiguration) -> CGPath? {
+    public func waveformPathPoints(from waveform: Waveform, with configuration: WaveformConfiguration) -> [CGPoint] {
         let scaledSize = CGSize(width: configuration.size.width * configuration.scale,
                                 height: configuration.size.height * configuration.scale)
         let scaledConfiguration = WaveformConfiguration(size: scaledSize,
@@ -23,7 +23,7 @@ public struct WaveformImageDrawer {
                                                         position: configuration.position,
                                                         scale: configuration.scale,
                                                         paddingFactor: configuration.paddingFactor)
-        return renderPath(waveform: waveform, with: scaledConfiguration)
+        return renderPoints(waveform: waveform, with: scaledConfiguration)
     }
     
 
@@ -69,30 +69,30 @@ public struct WaveformImageDrawer {
                              position: position, scale: scale, paddingFactor: paddingFactor)
     }
     
-    public func waveformPath(fromAudio audioAsset: AVURLAsset,
+    public func waveformPathPoints(fromAudio audioAsset: AVURLAsset,
                                 size: CGSize,
                                 color: UIColor = UIColor.black,
                                 backgroundColor: UIColor = UIColor.clear,
                                 style: WaveformStyle = .gradient,
                                 position: WaveformPosition = .middle,
                                 scale: CGFloat = 1.0,
-                                paddingFactor: CGFloat? = nil) -> CGPath? {
-          guard let waveform = Waveform(audioAsset: audioAsset) else { return nil }
+                                paddingFactor: CGFloat? = nil) -> [CGPoint] {
+          guard let waveform = Waveform(audioAsset: audioAsset) else { return [] }
           let configuration = WaveformConfiguration(size: CGSize(width: size.width * self.imageMultiplayer, height: size.height * self.imageMultiplayer) , color: color, backgroundColor: backgroundColor, style: style,
                                                     position: position, scale: scale, paddingFactor: paddingFactor)
-          return waveformPath(from: waveform, with: configuration)
+          return waveformPathPoints(from: waveform, with: configuration)
       }
       
-      public func waveformPath(fromAudioAt audioAssetURL: URL,
+      public func waveformPathPoints(fromAudioAt audioAssetURL: URL,
                                 size: CGSize,
                                 color: UIColor = UIColor.black,
                                 backgroundColor: UIColor = UIColor.clear,
                                 style: WaveformStyle = .gradient,
                                 position: WaveformPosition = .middle,
                                 scale: CGFloat = 1.0,
-                                paddingFactor: CGFloat? = nil) -> CGPath? {
+                                paddingFactor: CGFloat? = nil) -> [CGPoint] {
           let audioAsset = AVURLAsset(url: audioAssetURL)
-          return waveformPath(fromAudio: audioAsset, size: size, color: color, backgroundColor: backgroundColor, style: style,
+          return waveformPathPoints(fromAudio: audioAsset, size: size, color: color, backgroundColor: backgroundColor, style: style,
                                position: position, scale: scale, paddingFactor: paddingFactor)
       }
     // swiftlint:enable function_parameter_count
@@ -101,10 +101,10 @@ public struct WaveformImageDrawer {
 // MARK: Image generation
 
 private extension WaveformImageDrawer {
-    func renderPath(waveform: Waveform, with configuration: WaveformConfiguration) -> CGPath? {
+    func renderPoints(waveform: Waveform, with configuration: WaveformConfiguration) -> [CGPoint] {
         let sampleCount = Int(configuration.size.width / (self.sampleWidth + self.sampleOffset))
-        guard let samples = waveform.samples(count: sampleCount) else { return nil }
-        return getCustomPath(from: samples, with: configuration)
+        guard let samples = waveform.samples(count: sampleCount) else { return [] }
+        return getPathPoints(from: samples, with: configuration)
     }
     
     func render(waveform: Waveform, with configuration: WaveformConfiguration) -> UIImage? {
@@ -181,27 +181,16 @@ private extension WaveformImageDrawer {
         }
     }
     
-    func getCustomPath(from samples: [Float], with configuration: WaveformConfiguration) -> CGPath {
+    func getPathPoints(from samples: [Float], with configuration: WaveformConfiguration) -> [CGPoint] {
         let graphRect = CGRect(origin: CGPoint.zero, size: configuration.size)
         let positionAdjustedGraphCenter = CGFloat(configuration.position.value()) * graphRect.size.height
         let verticalPaddingDivisor = configuration.paddingFactor ?? CGFloat(configuration.position.value() == 0.5 ? 2.5 : 1.5)
         let drawMappingFactor = graphRect.size.height / verticalPaddingDivisor
         let minimumGraphAmplitude: CGFloat = 1 // we want to see at least a 1pt line for silence
-        
-        let allPaths = CGMutablePath()
-        var maxAmplitude: CGFloat = 0.0 // we know 1 is our max in normalized data, but we keep it 'generic'
-        allPaths.move(to: CGPoint.zero)
       
-        for (x, sample) in samples.enumerated() {
-            let xPos = CGFloat(x) * (sampleOffset + sampleWidth)
-            let invertedDbSample = 1 - CGFloat(sample) // sample is in dB, linearly normalized to [0, 1] (1 -> -50 dB)
-            let drawingAmplitude = max(minimumGraphAmplitude, invertedDbSample * drawMappingFactor)
-            let drawingAmplitudeUp = positionAdjustedGraphCenter - drawingAmplitude
-            maxAmplitude = max(drawingAmplitude, maxAmplitude)
-            
-            let cgRect = CGRect(x: xPos , y: drawingAmplitudeUp, width: sampleWidth, height: 2 * drawingAmplitude)
-            allPaths.addLine(to: CGPoint(x: cgRect.midX, y: cgRect.minY))
-        }
+        var allPoints: [CGPoint] = []
+        var upPoints: [CGPoint] = []
+        var downPoints: [CGPoint] = []
         
         for i in stride(from: samples.count - 1, through: 0, by: -1) {
             let sample = samples[i]
@@ -211,8 +200,10 @@ private extension WaveformImageDrawer {
             let drawingAmplitudeUp = positionAdjustedGraphCenter - drawingAmplitude
              
             let cgRect = CGRect(x: xPos , y: drawingAmplitudeUp, width: sampleWidth, height: 2 * drawingAmplitude)
-            allPaths.addLine(to: CGPoint(x: cgRect.midX, y: cgRect.maxY))
+            downPoints.append(CGPoint(x: cgRect.midX, y: cgRect.maxY))
+            upPoints.insert(CGPoint(x: cgRect.midX, y: cgRect.minY), at: 0)
         }
-        return allPaths
+        allPoints = upPoints + downPoints
+        return allPoints
     }
 }
