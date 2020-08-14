@@ -192,7 +192,7 @@ private extension WaveformImageDrawer {
         var upPoints: [CGPoint] = []
         var downPoints: [CGPoint] = []
         
-        for i in stride(from: samples.count - 1, through: 0, by: -1) {
+        for i in stride(from: 0, to: samples.count, by: 1) {
             let sample = samples[i]
             let xPos = CGFloat(i) * (sampleOffset + sampleWidth)
             let invertedDbSample = 1 - CGFloat(sample) // sample is in dB, linearly normalized to [0, 1] (1 -> -50 dB)
@@ -200,8 +200,8 @@ private extension WaveformImageDrawer {
             let drawingAmplitudeUp = positionAdjustedGraphCenter - drawingAmplitude
              
             let cgRect = CGRect(x: xPos , y: drawingAmplitudeUp, width: sampleWidth, height: 2 * drawingAmplitude)
-            downPoints.append(CGPoint(x: cgRect.midX, y: cgRect.maxY))
-            upPoints.insert(CGPoint(x: cgRect.midX, y: cgRect.minY), at: 0)
+            downPoints.insert(CGPoint(x: cgRect.midX, y: cgRect.maxY), at: 0)
+            upPoints.append(CGPoint(x: cgRect.midX, y: cgRect.minY))
         }
         allPoints = upPoints + downPoints
         return allPoints
