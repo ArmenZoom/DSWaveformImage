@@ -52,7 +52,7 @@ fileprivate extension WaveformAnalyzer {
         var sampleBufferFFT = Data()
 
         // read upfront to avoid frequent re-calculation (and memory bloat from C-bridging)
-        let samplesPerPixel = max(1, sampleCount(from: assetReader) / targetSampleCount)
+        let samplesPerPixel = max(1, sampleCount(from: assetReader) / max(targetSampleCount, 1))
         let samplesPerFFT = 4096 // ~100ms at 44.1kHz, rounded to closest pow(2) for FFT
 
         assetReader.startReading()
