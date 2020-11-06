@@ -170,14 +170,15 @@ fileprivate extension WaveformAnalyzer {
 
     // swiftlint:disable force_cast
     private func channelCount(from assetReader: AVAssetReader) -> Int {
-        let audioTrack = (assetReader.outputs.first as? AVAssetReaderTrackOutput)?.track
         var channelCount = 0
-
-        autoreleasepool {
-            let descriptions = audioTrack?.formatDescriptions as! [CMFormatDescription]
-            descriptions.forEach { formatDescription in
-                guard let basicDescription = CMAudioFormatDescriptionGetStreamBasicDescription(formatDescription) else { return }
-                channelCount = Int(basicDescription.pointee.mChannelsPerFrame)
+        if let audioTrack = (assetReader.outputs.first as? AVAssetReaderTrackOutput)?.track {
+            autoreleasepool {
+                if let descriptions = audioTrack.formatDescriptions as? [CMFormatDescription] {
+                    descriptions.forEach { formatDescription in
+                        guard let basicDescription = CMAudioFormatDescriptionGetStreamBasicDescription(formatDescription) else { return }
+                        channelCount = Int(basicDescription.pointee.mChannelsPerFrame)
+                    }
+                }
             }
         }
         return channelCount
